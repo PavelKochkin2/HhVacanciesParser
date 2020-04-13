@@ -33,46 +33,64 @@ namespace HhVacanciesParser
 
             var usdSalaries = salaryNodes.Where(x => x.InnerText.Contains("USD"));
             
-            var salaryValues = new List<int>();
+            var salaryValues = new List<double>();
 
+            
+                
             foreach (var salary in usdSalaries)
             {
                 string salaryString = salary.InnerText;
 
+                var clearedValue = ClearValue(salary.InnerText);
+
                 if (salaryString.StartsWith("от")) //от 500 USD
                 {
-                    //очистить стрингу оставив только цифры
-                    //спарсить ее в инт
-                    //добавить к этому значению 25% (т.к. зп от, значит минимальная, но тут хз)
-                    //добавить в salaryValues
+
+                    var loh = clearedValue + (clearedValue * 0.25);
+                    salaryValues.Add(loh);
                 }
 
                 if (salaryString.StartsWith("до")) //до 1000 USD
                 {
-                    //очистить стрингу оставив только цифры
-                    //спарсить ее в инт
-                    //отнять 25% (логика та же что и выше)
-                    //добавить в salaryValues
+                    var loh = clearedValue - (clearedValue * 0.25);
+                    salaryValues.Add(loh);
                 }
 
                 if (salaryString.Contains('-')) // 1000-2 000 USD 
                 {
-                    //переписать говнокод внизу
-                    //он берет два значения, парсит их и берет среднее
-                    var withoutUsd = salaryString.Remove(salary.InnerText.Length - 3, 3);
-                    var withoutSpaces = Regex.Replace(withoutUsd, @"\s+", "");
-                    string[] subs = withoutSpaces.Split('-');
-
-                    var x = int.Parse(subs[0]);
-                    var y = int.Parse(subs[1]);
-
-                    var result = ((y + x) / 2);
+                    var loshok = (double)clearedValue;
+                    salaryValues.Add(loshok);
                 }
                 else
                 {
                     //TODO: process salaries with just digit value, like 1000USD
                 }
             }
+
+            var avgUsdSalary = salaryValues.Sum() / salaryValues.Count;
+        }
+
+        private int ClearValue(string value)
+        {
+            Regex betweenRegex = new Regex(@"(\d+)");
+
+            var withoutSpaces = Regex.Replace(value, @"\s+", "");
+            var digits = betweenRegex.Matches(withoutSpaces);
+
+            if (digits.Count > 1)
+            {
+                var x = int.Parse(digits[0].Value);
+                var y = int.Parse(digits[1].Value);
+
+                var avg = ((x + y) / 2);//это не обязанность этого метода считать среднее
+
+                return avg;
+            }
+
+            var intValue = int.Parse(digits[0].Value);
+
+            return intValue;
         }
     }
 }
+
